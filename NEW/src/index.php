@@ -12,20 +12,29 @@ if ($conn->connect_error) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
-    
-    $sql = "SELECT * FROM users WHERE name = '$name'";
-    $result = $conn->query($sql);
+     
+    $sql = "SELECT * FROM users WHERE name = ?"; // Gebruik een prepared statement
+    if ($stmt = $conn->prepare($sql)) {          // Bereid de SQL-query voor
+        $stmt->bind_param("s", $name);           // Voeg het variabel toe aan de query
+        $stmt->execute();                        // Query uitvoeren
+        $result = $stmt->get_result(); 
 
-    if ($result->num_rows > 0) {
-        echo "User found: <br>";
-        while($row = $result->fetch_assoc()) {
-            echo "id: " . $row["id"]. " - Name: " . $row["name"]. "<br>";
+        if ($result->num_rows > 0) {
+            echo "User found: <br>";
+            while ($row = $result->fetch_assoc()) {
+                echo "id: " . $row["id"] . " - Name: " . $row["name"] . "<br>";
+            }
+        } else {
+            echo "No user found";
         }
+        $stmt->close();
     } else {
-        echo "No user found";
+        echo "Error preparing the query.";
     }
 }
+$conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
